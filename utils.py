@@ -36,8 +36,9 @@ def get_complementary_graph(g, feat):
     cosine_sim  = torch.cosine_similarity(feat.unsqueeze(1), feat.unsqueeze(0),dim=2)
     ones_matrix = torch.ones((g.num_nodes(),g.num_nodes()))
     A_complementary = ones_matrix - g.adj()
+    # A_complementary = g.adj().to_dense()
     assert (A_complementary - A_complementary.T).sum() == 0
-    A_complementary = TopK(cosine_sim * A_complementary, 3)
+    A_complementary = TopK(cosine_sim * A_complementary, 15) # Chameleon 15 Squirrel 
     g_complementary = dgl.from_scipy(to_scipy(torch.tensor(A_complementary)))
     return g_complementary
 

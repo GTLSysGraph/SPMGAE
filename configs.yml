@@ -615,7 +615,7 @@ chameleon:
   weight_decay_f: 1e-4
   max_epoch: 1500
   max_epoch_f: 300
-  encoder: gat
+  encoder: gprgnn
   decoder: gat
   activation: prelu
   in_drop: 0.2
@@ -628,19 +628,62 @@ chameleon:
   scheduler: True
   concat_hidden: False 
 
-  #### attack chameleon meta 0.25           
+
   mask_rate          : 0.5
-  num_hidden         : 64
+  num_hidden         : 256
   drop_edge_rate     : 0.0
   sim_mode           : cosine
-  keep_threshold     : 0.6
-  dele_threshold     : 0.6
+  keep_threshold     : 0.55
+  dele_threshold     : 0.55
   edge_hidden        : 64
   updata_guide_model : 200  
-  decay              : 0.9 
+  decay              : 0.1
   undirected         : False
-  add_rate           : 0.
+  add_rate           : 0.5
+  alpha              : 1
   gamma              : 0.
-  beta               : 0. # 0.5
+  beta               : 0.5 # 0.5
   type_graph4recon   : "refine"
-  use_complementary_graph: False
+  use_complementary_graph: True
+
+
+squirrel:
+  seeds: [1,2,3,4]
+  lr: 0.001
+  lr_f: 0.01
+  batch_size: 500
+  num_heads: 4
+  num_layers: 2
+  weight_decay: 2e-4
+  weight_decay_f: 1e-4
+  max_epoch: 800
+  max_epoch_f: 300
+  encoder: gprgnn
+  decoder: gat
+  activation: prelu
+  in_drop: 0.2
+  attn_drop: 0.1
+  linear_prob: True
+  loss_fn: sce 
+  optimizer: adam
+  replace_rate: 0.05
+  alpha_l: 3
+  scheduler: True
+  concat_hidden: False 
+
+  mask_rate          : 0.5
+  num_hidden         : 256
+  drop_edge_rate     : 0.4
+  sim_mode           : cosine
+  keep_threshold     : 0.55
+  dele_threshold     : 0.55
+  edge_hidden        : 64
+  updata_guide_model : 200  
+  decay              : 0.1
+  undirected         : False
+  add_rate           : 0.5
+  alpha              : 1.
+  gamma              : 0.
+  beta               : 0.1 # 0.5
+  type_graph4recon   : "refine"
+  use_complementary_graph: True

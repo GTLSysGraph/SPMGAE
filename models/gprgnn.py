@@ -9,7 +9,7 @@ import dgl.function as fn
 from dgl.utils import expand_as_pair
 
 class ada_prop(nn.Module):
-    def __init__(self, P, coe, norm='both',bias=True, **kwargs):
+    def __init__(self, P, coe, norm='both'):
         super(ada_prop, self).__init__()
         self.P = P
         self.coe = coe

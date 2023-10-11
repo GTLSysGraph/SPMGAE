@@ -30,6 +30,7 @@ def build_model(param):
     decay              = param.decay
     undirected         = param.undirected
     add_rate           = param.add_rate
+    alpha              = param.alpha
     gamma              = param.gamma
     beta               = param.beta
     type_graph4recon   = param.type_graph4recon
@@ -62,6 +63,7 @@ def build_model(param):
         decay              = decay,
         undirected         = undirected,
         add_rate           = add_rate,
+        alpha              = alpha,
         gamma              = gamma,
         beta               = beta,
         type_graph4recon   = type_graph4recon

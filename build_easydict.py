@@ -51,6 +51,7 @@ def build_easydict():
         "decay"              : 0.95,
         "undirected"         : False,
         "add_rate"           : 0.4,
+        "alpha"              : 1,
         "gamma"              : 10,
         "beta"               : 0.001,
         "type_graph4recon"   : "refine",

@@ -164,6 +164,7 @@ def Train_SPMGAE_nodecls(margs):
     batch_size     = param.batch_size
     param.num_features = num_features
 
+
     # 
     feat       = graph.ndata["feat"]
     train_mask = graph.ndata["train_mask"].to(device)
@@ -171,6 +172,10 @@ def Train_SPMGAE_nodecls(margs):
     test_mask  = graph.ndata["test_mask"].to(device)
     labels     = graph.ndata["label"].to(device)
 
+    if param.use_complementary_graph:
+        graph = get_complementary_graph(graph, feat)
+        graph = dgl.remove_self_loop(graph)
+        graph = dgl.add_self_loop(graph).to(device)
 
 
     acc_list = []
@@ -199,10 +204,6 @@ def Train_SPMGAE_nodecls(margs):
         else:
             scheduler = None
 
-        if param.use_complementary_graph:
-            graph = get_complementary_graph(graph, feat)
-            graph = dgl.remove_self_loop(graph)
-            graph = dgl.add_self_loop(graph).to(device)
         
 
         if not load_model:

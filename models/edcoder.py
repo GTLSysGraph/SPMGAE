@@ -131,6 +131,7 @@ class PreModel(nn.Module):
             decay              = 0.95,
             undirected         = False,
             add_rate           = 0.4,
+            alpha              = 1.0,
             gamma              = 10,
             beta               = 0.001,
             type_graph4recon   = "refine"
@@ -154,6 +155,7 @@ class PreModel(nn.Module):
         self.edge_hidden        = edge_hidden
         self.updata_guide_model = updata_guide_model
         self.decay              = decay
+        self.alpha              = alpha
         self.gamma              = gamma
         self.beta               = beta
         self.type_graph4recon   = type_graph4recon
@@ -392,7 +394,7 @@ class PreModel(nn.Module):
         x_init = x[mask_nodes]
         x_rec  = recon[mask_nodes]
         
-        loss =   self.criterion(x_rec, x_init)  +  self.gamma * F.mse_loss(enc_rep[mask_nodes], guide_enc_rep[mask_nodes]) + self.beta * loss_struct
+        loss =   self.alpha * self.criterion(x_rec, x_init)  +  self.gamma * F.mse_loss(enc_rep[mask_nodes], guide_enc_rep[mask_nodes]) + self.beta * loss_struct
         # loss = loss_struct
         return loss
 
