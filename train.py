@@ -16,16 +16,16 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=lo
 
 
 
-def pretrain_tranductive(param, model, graph, feat, optimizer, max_epoch, device, scheduler, num_classes, lr_f, weight_decay_f, max_epoch_f, linear_prob, logger=None):
+def pretrain_tranductive(param, model, graph, feat, label, train_mask, val_mask, test_mask, optimizer, max_epoch, device, scheduler, num_classes, lr_f, weight_decay_f, max_epoch_f, linear_prob, logger=None):
     logging.info("start training SPMGAE node classification..")
     graph = graph.to(device)
     x = feat.to(device)
 
     ###########################################################
     n_node = graph.num_nodes()
-
-    homophily_score_before = compute_graph_homophily_score(graph, graph.ndata['label'])
-    print(homophily_score_before)
+    
+    # homophily_score_before = compute_graph_homophily_score(graph, label)
+    # print(homophily_score_before)
 
     edges_sim       = compute_edge_sim(graph.edges(), x, sim_mode=param.sim_mode)
     
@@ -40,8 +40,8 @@ def pretrain_tranductive(param, model, graph, feat, optimizer, max_epoch, device
     graph_refine = graph_refine.add_self_loop()
 
 
-    homophily_score_after = compute_graph_homophily_score(graph_refine, graph.ndata['label'])
-    print(homophily_score_after)
+    # homophily_score_after = compute_graph_homophily_score(graph_refine, label)
+    # print(homophily_score_after)
 
     print('num  edges : {}'.format(graph.num_edges()))
     print('keep edges : {}'.format(len(ref_edges_index[0])))
@@ -68,7 +68,7 @@ def pretrain_tranductive(param, model, graph, feat, optimizer, max_epoch, device
             logger.note(loss_dict, step=epoch)
 
         if (epoch + 1) % 200 == 0:
-            node_classification_evaluation(model, graph, x, num_classes, lr_f, weight_decay_f, max_epoch_f, device, linear_prob, mute=True)
+            node_classification_evaluation(model, graph, x, label, train_mask, val_mask, test_mask, num_classes, lr_f, weight_decay_f, max_epoch_f, device, linear_prob, mute=True)
 
     # return best_model
     return model
@@ -98,13 +98,9 @@ def Train_SPMGAE_nodecls(margs):
     graph = dgl.remove_self_loop(graph)
     graph = dgl.add_self_loop(graph)
 
-
-
-
     num_classes = dataset.num_classes
     num_features = graph.ndata['feat'].shape[1]
 
-    
     MDT = build_easydict()
     param         = MDT['MODEL']['PARAM']
     if param.use_cfg:
@@ -168,6 +164,14 @@ def Train_SPMGAE_nodecls(margs):
     batch_size     = param.batch_size
     param.num_features = num_features
 
+    # 
+    feat       = graph.ndata["feat"]
+    train_mask = graph.ndata["train_mask"].to(device)
+    val_mask   = graph.ndata["val_mask"].to(device)
+    test_mask  = graph.ndata["test_mask"].to(device)
+    labels     = graph.ndata["label"].to(device)
+
+
 
     acc_list = []
     estp_acc_list = []
@@ -195,9 +199,14 @@ def Train_SPMGAE_nodecls(margs):
         else:
             scheduler = None
 
+        if param.use_complementary_graph:
+            graph = get_complementary_graph(graph, feat)
+            graph = dgl.remove_self_loop(graph)
+            graph = dgl.add_self_loop(graph).to(device)
+        
 
         if not load_model:
-            model = pretrain_tranductive(param, model, graph, graph.ndata["feat"], optimizer, max_epoch, device, scheduler, num_classes, lr_f, weight_decay_f, max_epoch_f, linear_prob, logger)
+            model = pretrain_tranductive(param, model, graph, feat, labels, train_mask, val_mask, test_mask, optimizer, max_epoch, device, scheduler, num_classes, lr_f, weight_decay_f, max_epoch_f, linear_prob, logger)
         
 
         if load_model:
@@ -210,8 +219,7 @@ def Train_SPMGAE_nodecls(margs):
         model = model.to(device)
         model.eval()
 
-
-        final_acc, estp_acc = node_classification_evaluation(model, graph, graph.ndata['feat'], num_classes, lr_f, weight_decay_f, max_epoch_f, device, linear_prob)
+        final_acc, estp_acc = node_classification_evaluation(model, graph, feat, labels, train_mask, val_mask, test_mask,num_classes, lr_f, weight_decay_f, max_epoch_f, device, linear_prob)
 
 
         acc_list.append(final_acc)

@@ -11,6 +11,7 @@ import dgl
 import yaml
 from collections import namedtuple, Counter
 from datasets_dgl.data_dgl import load_graph_data
+from datasets_dgl.utils import to_scipy
 import torch.nn.functional as F
 
 
@@ -20,6 +21,27 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=lo
 def compute_graph_homophily_score(g, label):
     edges = g.edges()
     return sum(label[edges[0]] == label[edges[1]]) / g.num_edges()
+
+def TopK(arr, k):
+    vas, ids = torch.topk(arr, k)
+    k_v, k_ids = torch.min(vas, dim=1)
+    k_v = k_v.numpy()
+    arr = arr.numpy()
+    arr = arr.T
+    arr[arr < k_v] = 0
+    return arr.T
+
+
+def get_complementary_graph(g, feat):
+    cosine_sim  = torch.cosine_similarity(feat.unsqueeze(1), feat.unsqueeze(0),dim=2)
+    ones_matrix = torch.ones((g.num_nodes(),g.num_nodes()))
+    A_complementary = ones_matrix - g.adj()
+    assert (A_complementary - A_complementary.T).sum() == 0
+    A_complementary = TopK(cosine_sim * A_complementary, 3)
+    g_complementary = dgl.from_scipy(to_scipy(torch.tensor(A_complementary)))
+    return g_complementary
+
+
 
 
 def compute_edge_sim(edges,features,sim_mode='cosine'):
@@ -34,7 +56,6 @@ def compute_edge_sim(edges,features,sim_mode='cosine'):
         avg1 = torch.mean(features[edges[1]],dim=1).unsqueeze(-1)
         edges_sim = F.cosine_similarity(features[edges[0]] - avg0 , features[edges[1]] - avg1, dim=1)
         edges_sim = 0.5 + 0.5 * edges_sim # # 皮尔逊相关系数的取值范围(-1 ~ 1),0.5 + 0.5 * result 归一化(0 ~ 1)
-    
     return edges_sim
 
 

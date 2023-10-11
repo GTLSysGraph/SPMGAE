@@ -5,9 +5,10 @@ from itertools import chain
 from functools import partial
 from utils import create_norm, drop_edge 
 from models.loss_func import sce_loss
-from models.gin import GIN
-from models.gat import GAT
-from models.gcn import GCN
+from models.gin    import GIN
+from models.gat    import GAT
+from models.gcn    import GCN
+from models.gprgnn import GPRGNN
 from models.dot_gat import DotGAT
 from models.edgedecoder import EdgeDecoder
 from utils import add_ptb_edges
@@ -87,6 +88,11 @@ def setup_module(m_type, enc_dec, in_dim, num_hidden, out_dim, num_layers, dropo
             nn.Dropout(0.2),
             nn.Linear(num_hidden, out_dim)
         )
+    elif m_type == 'gprgnn':
+        mod = GPRGNN(in_dim=in_dim, 
+                     hidden_dim=num_hidden, 
+                     out_dim=out_dim, 
+                     dropout=dropout)
     elif m_type == "linear":
         mod = nn.Linear(in_dim, out_dim)
     else:
@@ -338,7 +344,7 @@ class PreModel(nn.Module):
 
         graph_preturbation, use_x, (mask_nodes, keep_nodes), (perb_edges_src,perb_edges_dst) = self.encoding_mask_noise(use_g, del_edges, x, self._add_rate, self._mask_rate, undirected = self._undirected)
 
-        enc_rep, all_hidden = self.encoder(graph_preturbation, use_x, return_hidden=True)
+        enc_rep, all_hidden = self.encoder(graph_preturbation, use_x)
         if self._concat_hidden:
             enc_rep = torch.cat(all_hidden, dim=1)
 
@@ -348,7 +354,7 @@ class PreModel(nn.Module):
             self.guide_model_apply_shadow()
 
         self.guide_encoder = self.guide_encoder.to('cuda')
-        guide_enc_rep, guide_all_hidden = self.guide_encoder(graph_refine, x, return_hidden=True)
+        guide_enc_rep, guide_all_hidden = self.guide_encoder(graph_refine, x)
         if self._concat_hidden:
             guide_enc_rep = torch.cat(guide_all_hidden, dim=1)
         guide_enc_rep = guide_enc_rep.detach()
@@ -379,16 +385,13 @@ class PreModel(nn.Module):
 
 
         if self._decoder_type in ("mlp", "liear") :
-            recon = self.decoder(rep)
+            recon     = self.decoder(rep)
         else:
-            recon = self.decoder(graph4recon, rep) # 扰动小的时候用graph_preturbation 用pertuerbation比refine要好，猜测原因，在cora的时候貌似更喜欢对扰动矩阵重建，扰动小的时候其实所有的边都是有用的，所以其实graph perb比refine多了更多的有用信息来帮助重建，因为加的边其实并不是扰动边
-
+            recon, _  = self.decoder(graph4recon, rep) # 扰动小的时候用graph_preturbation 用pertuerbation比refine要好，猜测原因，在cora的时候貌似更喜欢对扰动矩阵重建，扰动小的时候其实所有的边都是有用的，所以其实graph perb比refine多了更多的有用信息来帮助重建，因为加的边其实并不是扰动边
 
         x_init = x[mask_nodes]
         x_rec  = recon[mask_nodes]
-
-
-        # mask ? keep ? all?
+        
         loss =   self.criterion(x_rec, x_init)  +  self.gamma * F.mse_loss(enc_rep[mask_nodes], guide_enc_rep[mask_nodes]) + self.beta * loss_struct
         # loss = loss_struct
         return loss

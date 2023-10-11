@@ -67,7 +67,7 @@ class GIN(nn.Module):
 
         self.head = nn.Identity()
 
-    def forward(self, g, inputs, return_hidden=False):
+    def forward(self, g, inputs):
         h = inputs
         hidden_list = []
         for l in range(self.num_layers):
@@ -75,10 +75,8 @@ class GIN(nn.Module):
             h = self.layers[l](g, h)
             hidden_list.append(h)
         # output projection
-        if return_hidden:
-            return self.head(h), hidden_list
-        else:
-            return self.head(h)
+        return self.head(h), hidden_list
+
 
     def reset_classifier(self, num_classes):
         self.head = nn.Linear(self.out_dim, num_classes)

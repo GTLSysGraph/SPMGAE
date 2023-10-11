@@ -6,11 +6,11 @@ import copy
 
 
 
-def node_classification_evaluation(model, graph, x, num_classes, lr_f, weight_decay_f, max_epoch_f, device, linear_prob=True, mute=False):
+def node_classification_evaluation(model, graph, x, labels, train_mask, val_mask, test_mask, num_classes, lr_f, weight_decay_f, max_epoch_f, device, linear_prob=True, mute=False):
     model.eval()
     if linear_prob:
         with torch.no_grad():
-            x = model.embed(graph.to(device), x.to(device))
+            x, _ = model.embed(graph.to(device), x.to(device))
             in_feat = x.shape[1]
         encoder = LogisticRegression(in_feat, num_classes)
     else:
@@ -24,7 +24,7 @@ def node_classification_evaluation(model, graph, x, num_classes, lr_f, weight_de
     
     encoder.to(device)
     optimizer_f = create_optimizer("adam", encoder, lr_f, weight_decay_f)
-    final_acc, estp_acc = linear_probing_for_transductive_node_classiifcation(encoder, graph, x, optimizer_f, max_epoch_f, device, mute)
+    final_acc, estp_acc = linear_probing_for_transductive_node_classiifcation(encoder, graph, x, labels, train_mask, val_mask, test_mask, optimizer_f, max_epoch_f, device, mute)
     return final_acc, estp_acc
 
 
@@ -39,16 +39,11 @@ class LogisticRegression(nn.Module):
         return logits
 
 
-def linear_probing_for_transductive_node_classiifcation(model, graph, feat, optimizer, max_epoch, device, mute=False):
+def linear_probing_for_transductive_node_classiifcation(model, graph, feat, labels, train_mask, val_mask, test_mask, optimizer, max_epoch, device, mute=False):
     criterion = torch.nn.CrossEntropyLoss()
 
     graph = graph.to(device)
     x = feat.to(device)
-
-    train_mask = graph.ndata["train_mask"]
-    val_mask = graph.ndata["val_mask"]
-    test_mask = graph.ndata["test_mask"]
-    labels = graph.ndata["label"]
 
     best_val_acc = 0
     best_val_epoch = 0

@@ -583,23 +583,23 @@ pubmed:
   # type_graph4recon   : "refine"
 
 
-  #### attack pubmed meta 0.25   0.7833±0.0012          
+  ### attack pubmed meta 0.25   0.7833±0.0012          
   # gamma:    0  77.2  10  78.07    20 0.7807     40 0.7845   60 78.58   80 78.20
   # beta：    0  67.5  0.1 76.07    0.5 0.7833    1  77.81    10 76.72   20 75.8
-  # mask_rate          : 0.1
-  # num_hidden         : 1024
-  # drop_edge_rate     : 0.0
-  # sim_mode           : jaccard
-  # keep_threshold     : 0.2 #0.08
-  # dele_threshold     : 0.2 #0.04
-  # edge_hidden        : 64
-  # updata_guide_model : 200  # 在pubmed里貌似不希望迭代的太快
-  # decay              : 0.1 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
-  # undirected         : False
-  # add_rate           : 0.8
-  # gamma              : 40
-  # beta               : 0.5 # 0.5
-  # type_graph4recon   : "refine"
+  mask_rate          : 0.1
+  num_hidden         : 1024
+  drop_edge_rate     : 0.0
+  sim_mode           : jaccard
+  keep_threshold     : 0.2 #0.08
+  dele_threshold     : 0.2 #0.04
+  edge_hidden        : 64
+  updata_guide_model : 200  # 在pubmed里貌似不希望迭代的太快
+  decay              : 0.1 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
+  undirected         : False
+  add_rate           : 0.8
+  gamma              : 40
+  beta               : 0.5 # 0.5
+  type_graph4recon   : "refine"
 
 
 
@@ -615,8 +615,6 @@ chameleon:
   weight_decay_f: 1e-4
   max_epoch: 1500
   max_epoch_f: 300
-  mask_rate: 0.5
-  num_layers: 2
   encoder: gat
   decoder: gat
   activation: prelu
@@ -631,17 +629,18 @@ chameleon:
   concat_hidden: False 
 
   #### attack chameleon meta 0.25           
-  mask_rate          : 0.1
+  mask_rate          : 0.5
   num_hidden         : 64
   drop_edge_rate     : 0.0
   sim_mode           : cosine
-  keep_threshold     : 0.5
-  dele_threshold     : 0.5
+  keep_threshold     : 0.6
+  dele_threshold     : 0.6
   edge_hidden        : 64
   updata_guide_model : 200  
   decay              : 0.9 
   undirected         : False
-  add_rate           : 0.6
-  gamma              : 0
-  beta               : 0.5 # 0.5
+  add_rate           : 0.
+  gamma              : 0.
+  beta               : 0. # 0.5
   type_graph4recon   : "refine"
+  use_complementary_graph: False

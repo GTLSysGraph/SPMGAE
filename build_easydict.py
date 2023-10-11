@@ -55,6 +55,8 @@ def build_easydict():
         "beta"               : 0.001,
         "type_graph4recon"   : "refine",
 
+        "use_complementary_graph" : False,
+
 
         # for graph classification
         "pooling"    : "mean",

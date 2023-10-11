@@ -60,7 +60,7 @@ class GCN(nn.Module):
         self.norms = None
         self.head = nn.Identity()
 
-    def forward(self, g, inputs, return_hidden=False):
+    def forward(self, g, inputs):
         h = inputs
         hidden_list = []
         for l in range(self.num_layers):
@@ -72,10 +72,9 @@ class GCN(nn.Module):
         # output projection
         if self.norms is not None and len(self.norms) == self.num_layers:
             h = self.norms[-1](h)
-        if return_hidden:
-            return self.head(h), hidden_list
-        else:
-            return self.head(h)
+
+        return self.head(h), hidden_list
+
 
     def reset_classifier(self, num_classes):
         self.head = nn.Linear(self.out_dim, num_classes)
