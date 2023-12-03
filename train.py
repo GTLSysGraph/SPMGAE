@@ -96,6 +96,13 @@ def Train_SPMGAE_nodecls(margs):
         graph = dataset[0]
 
     graph = dgl.remove_self_loop(graph)
+
+    # print(graph)
+    # homophily_score_before = compute_graph_homophily_score(graph, graph.ndata['label'])
+    # print(homophily_score_before)
+    # quit()
+
+
     graph = dgl.add_self_loop(graph)
 
     num_classes = dataset.num_classes
@@ -152,8 +159,6 @@ def Train_SPMGAE_nodecls(margs):
     optim_type    = param.optimizer 
     loss_fn       = param.loss_fn
 
-    lr             = param.lr
-    weight_decay   = param.weight_decay
     lr_f           = param.lr_f
     weight_decay_f = param.weight_decay_f
     linear_prob    = param.linear_prob

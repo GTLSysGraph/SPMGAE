@@ -34,13 +34,16 @@ def build_easydict():
         "lr_f"          : 0.001,
         "weight_decay_f": 0.0,
         "linear_prob"   : False,
-    
+
         "load_model"    : False,
         "save_model"    : False,
         "use_cfg"       : True,
         "logging"       : False,
         "scheduler"     : False,
         "concat_hidden" : False,
+
+        "checkpoint_path": "checkpoints",
+        "no_pretrain"   : False,
 
         # add by ssh
         "sim_mode"           : "cosine",
@@ -55,7 +58,6 @@ def build_easydict():
         "gamma"              : 10,
         "beta"               : 0.001,
         "type_graph4recon"   : "refine",
-
         "use_complementary_graph" : False,
 
 

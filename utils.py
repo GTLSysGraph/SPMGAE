@@ -13,7 +13,7 @@ from collections import namedtuple, Counter
 from datasets_dgl.data_dgl import load_graph_data
 from datasets_dgl.utils import to_scipy
 import torch.nn.functional as F
-
+import psutil
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
@@ -57,6 +57,9 @@ def compute_edge_sim(edges,features,sim_mode='cosine'):
         avg1 = torch.mean(features[edges[1]],dim=1).unsqueeze(-1)
         edges_sim = F.cosine_similarity(features[edges[0]] - avg0 , features[edges[1]] - avg1, dim=1)
         edges_sim = 0.5 + 0.5 * edges_sim # # 皮尔逊相关系数的取值范围(-1 ~ 1),0.5 + 0.5 * result 归一化(0 ~ 1)
+    
+    print(max(edges_sim))
+    print(min(edges_sim))
     return edges_sim
 
 
@@ -207,6 +210,10 @@ def mask_edge(graph, mask_prob):
 def get_current_lr(optimizer):
     return optimizer.state_dict()["param_groups"][0]["lr"]
 
+
+def show_occupied_memory():
+    process = psutil.Process(os.getpid())
+    return process.memory_info().rss / 1024**2
 
 def load_best_configs(param, dataset_name, path):
     with open(path, "r") as f:
