@@ -693,14 +693,14 @@ squirrel:
 
 ogbn-arxiv:
   seeds: [5,6,7,8]
-  batch_size: 1024
+  batch_size: 2048
   lr: 0.001
   lr_f: 0.01
   num_heads: 4
   weight_decay: 0
   weight_decay_f: 5e-4
-  max_epoch: 1000
-  max_epoch_f: 600
+  max_epoch: 1
+  max_epoch_f: 1
   mask_rate: 0.5
   num_layers: 3
   encoder: gat
@@ -708,7 +708,7 @@ ogbn-arxiv:
   activation: prelu
   in_drop: 0.2
   attn_drop: 0.1
-  linear_prob: True
+  linear_prob: False
   loss_fn: sce
   replace_rate: 0.0
   alpha_l: 3 # 2

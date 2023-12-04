@@ -399,8 +399,16 @@ class PreModel(nn.Module):
         return loss
 
     def embed(self, g, x):
-        rep = self.encoder(g, x)
+        rep = self.encoder(g, x) # 注意，这里返回的rep是一个tuple
         return rep
+
+    def get_encoder(self):
+        #self.encoder.reset_classifier(out_size)
+        return self.encoder
+    
+    def reset_encoder(self, out_size):
+        self.encoder.reset_classifier(out_size)
+
 
     @property
     def enc_params(self):

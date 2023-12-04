@@ -3,8 +3,8 @@ from     easydict        import EasyDict
 import   torch
 from     utils          import *
 from     build_easydict import *
-from     evaluation     import * 
-from     datasets_dgl.data_dgl import *
+from     evaluation_mini_batch     import * 
+from     datasets_dgl.data_dgl     import *
 
 import   logging
 from     tqdm import tqdm
@@ -88,8 +88,6 @@ def Train_SPMGAE_nodecls(margs):
     #########################
     device = f"cuda" if torch.cuda.is_available() else "cpu"
   
-    
-
     dataset_name = margs.dataset
     if dataset_name.split('-', 1)[0] == 'Attack':
         # dataset_name = dataset_name.split('-')[1]
@@ -104,8 +102,10 @@ def Train_SPMGAE_nodecls(margs):
         graph = dataset.graph    
     else:
         dataset  = load_data(dataset_name)
+        split_idx = dataset.get_idx_split()
         graph, labels = dataset[0] # ogbn-arxiv
 
+    labels = labels.squeeze() # 变成1维，后面验证需要
     graph = dgl.remove_self_loop(graph)
 
 
@@ -115,6 +115,7 @@ def Train_SPMGAE_nodecls(margs):
     # quit()
 
     graph = dgl.add_self_loop(graph)
+
 
     num_classes = dataset.num_classes
     num_features = graph.ndata['feat'].shape[1]
@@ -156,45 +157,72 @@ def Train_SPMGAE_nodecls(margs):
     model_dir = "checkpoints"
     os.makedirs(model_dir, exist_ok=True)
 
-    #
-    labels     = labels.to(device)
 
-    for i, seed in enumerate(seeds):
-        print(f"####### Run {i+1} for seed {seed}")
-        set_random_seed(seed)
+    # for i, seed in enumerate(seeds):
+    #     print(f"####### Run {i+1} for seed {seed}")
+    set_random_seed(0)
 
-        if logs:
-            logger = TBLogger(name=f"{dataset_name.lower()}_loss_{loss_fn}_rpr_{replace_rate}_nh_{num_hidden}_nl_{num_layers}_lr_{lr}_mp_{max_epoch}_mpf_{max_epoch_f}_wd_{weight_decay}_wdf_{weight_decay_f}_{encoder_type}_{decoder_type}")
-        else:
-            logger = None
+    if logs:
+        logger = TBLogger(name=f"{dataset_name.lower()}_loss_{loss_fn}_rpr_{replace_rate}_nh_{num_hidden}_nl_{num_layers}_lr_{lr}_mp_{max_epoch}_mpf_{max_epoch_f}_wd_{weight_decay}_wdf_{weight_decay_f}_{encoder_type}_{decoder_type}")
+    else:
+        logger = None
 
-        model_name = f"{encoder}_{decoder}_{num_hidden}_{num_layers}_{dataset_name}_{param.mask_rate}_{num_hidden}_checkpoint.pt"
+    model_name = f"{encoder}_{decoder}_{num_hidden}_{num_layers}_{dataset_name}_{param.mask_rate}_{num_hidden}_checkpoint.pt"
 
-        model = build_model(param)
+    model = build_model(param)
 
-        if not param.no_pretrain:
-            # ------------- pretraining starts ----------------
-            if not load_model:
-                logging.info("---- start pretraining ----")
-                model = pretrain_mini_batch(param, model, graph,optimizer=optimizer_type, batch_size=1024, lr=lr, weight_decay=weight_decay, max_epoch=max_epoch, device=device, use_scheduler=use_scheduler, model_dir=model_dir, model_name=model_name)
-            
-                model = model.cpu()
-                logging.info(f"saving model to {model_dir}/{model_name}...")
-                torch.save(model.state_dict(), os.path.join(model_dir, model_name))
-            # ------------- pretraining ends ----------------   
+    if not param.no_pretrain:
+        # ------------- pretraining starts ----------------
+        if not load_model:
+            logging.info("---- start pretraining ----")
+            model = pretrain_mini_batch(param, model, graph,optimizer=optimizer_type, batch_size=batch_size, lr=lr, weight_decay=weight_decay, max_epoch=max_epoch, device=device, use_scheduler=use_scheduler, model_dir=model_dir, model_name=model_name)
+        
+            model = model.cpu()
+            logging.info(f"saving model to {model_dir}/{model_name}...")
+            torch.save(model.state_dict(), os.path.join(model_dir, model_name))
+        # ------------- pretraining ends ----------------   
 
-            if load_model:
-                model.load_state_dict(torch.load(os.path.join(param.checkpoint_path)))
-                logging.info(f"Loading Model from {param.checkpoint_path}...")
-        else:
-            logging.info("--- no pretrain ---")
+        if load_model:
+            model.load_state_dict(torch.load(os.path.join(param.checkpoint_path)))
+            logging.info(f"Loading Model from {param.checkpoint_path}...")
+    else:
+        logging.info("--- no pretrain ---")
 
 
-        # ok
-        model = model.to(device)
-        model.eval()
+    # eval
+    model = model.to(device)
+    model.eval()
 
-        logging.info("---- start finetuning / evaluation ----")
+    logging.info("---- start finetuning / evaluation ----")
+
+    final_accs = []
+    for i,_ in enumerate(seeds):
+        print(f"############################### Run eval seed {seeds[i]} ###############################")
+        set_random_seed(seeds[i])
+        eval_model = build_model(param)
+        eval_model.load_state_dict(model.state_dict())
+        eval_model.to(device)
+
+        print(f"features size : {graph.ndata['feat'].shape[1]}")
+        logging.info("start evaluation...")
+
+        final_acc = evaluete_mini_batch(
+                        eval_model, 
+                        graph, labels,
+                        split_idx,
+                        num_classes, 
+                        lr_f, weight_decay_f, max_epoch_f, 
+                        linear_prob, 
+                        device, batch_size, shuffle=True)
+
+        final_accs.append(float(final_acc))
+
+        print(f"Run {seeds[i]} | TestAcc: {final_acc:.4f}")
+        
+    print(f"# final_acc: {np.mean(final_accs):.4f}, std: {np.std(final_accs):.4f}")
+    
+    if logger is not None:
+        logger.finish()
 
 
 

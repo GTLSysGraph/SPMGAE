@@ -105,6 +105,7 @@ def Train_SPMGAE_nodecls(margs):
 
     graph = dgl.add_self_loop(graph)
 
+
     num_classes = dataset.num_classes
     num_features = graph.ndata['feat'].shape[1]
 
