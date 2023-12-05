@@ -59,9 +59,9 @@ def pretrain_mini_batch(param, model, graph, optimizer, batch_size, lr, weight_d
             graph_refine = graph_refine.remove_self_loop()
             graph_refine = graph_refine.add_self_loop()
 
-            print('num  edges : {}'.format(subgraph.num_edges()))
-            print('keep edges : {}'.format(len(ref_edges_index[0])))
-            print('del  edges : {}'.format(len(del_edges_index[0])))
+            # print('num  edges : {}'.format(subgraph.num_edges()))
+            # print('keep edges : {}'.format(len(ref_edges_index[0])))
+            # print('del  edges : {}'.format(len(del_edges_index[0])))
             ############################################################
 
             loss, loss_dict = model(graph_refine, del_edges, subgraph.ndata["feat"], epoch)
@@ -99,13 +99,19 @@ def Train_SPMGAE_nodecls(margs):
         }
         # now just attack use
         dataset  = load_attack_data(DATASET['ATTACK'])
-        graph = dataset.graph    
+        graph  = dataset.graph   
+        train_idx = graph.ndata['train_mask'].nonzero().squeeze()
+        val_idx = graph.ndata['val_mask'].nonzero().squeeze()
+        test_idx = graph.ndata['test_mask'].nonzero().squeeze()
+        split_idx = {'train': train_idx, 'valid': val_idx,'test': test_idx}
+        labels = graph.ndata['label']
     else:
         dataset  = load_data(dataset_name)
         split_idx = dataset.get_idx_split()
         graph, labels = dataset[0] # ogbn-arxiv
 
-    labels = labels.squeeze() # 变成1维，后面验证需要
+    
+    labels = labels.squeeze()   # 变成1维，后面验证需要
     graph = dgl.remove_self_loop(graph)
 
 
@@ -149,9 +155,9 @@ def Train_SPMGAE_nodecls(margs):
     logs           = param.logging
     use_scheduler  = param.scheduler
     batch_size     = param.batch_size
+    batch_size_f     = param.batch_size_f
     param.num_features = num_features
-    batch_size     = param.batch_size
-
+    
     optimizer_type = param.optimizer
 
     model_dir = "checkpoints"
@@ -213,7 +219,7 @@ def Train_SPMGAE_nodecls(margs):
                         num_classes, 
                         lr_f, weight_decay_f, max_epoch_f, 
                         linear_prob, 
-                        device, batch_size, shuffle=True)
+                        device, batch_size=batch_size_f, shuffle=True)
 
         final_accs.append(float(final_acc))
 
