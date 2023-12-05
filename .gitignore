@@ -1,2 +1,4 @@
 datasets_dgl/all_data_attack
 __pycache__/
+log/
+checkpoints/
