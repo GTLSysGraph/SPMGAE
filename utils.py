@@ -14,8 +14,17 @@ from datasets_dgl.data_dgl import load_graph_data
 from datasets_dgl.utils import to_scipy
 import torch.nn.functional as F
 import psutil
+from sklearn.preprocessing import StandardScaler
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
+
+
+def scale_feats(x):
+    scaler = StandardScaler()
+    feats = x.numpy()
+    scaler.fit(feats)
+    feats = torch.from_numpy(scaler.transform(feats)).float()
+    return feats
 
 
 def compute_graph_homophily_score(g, label):
