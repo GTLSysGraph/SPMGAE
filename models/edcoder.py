@@ -322,8 +322,7 @@ class PreModel(nn.Module):
     def forward(self, graph_refine, del_edges, x, epoch):
         # ---- attribute reconstruction ----
         loss = self.mask_attr_prediction(graph_refine, del_edges, x, epoch)
-        loss_item = {"loss": loss.item()}
-        return loss, loss_item
+        return loss
     
     def random_negative_sampler(self,edge_index, num_nodes, num_neg_samples):
         neg_edges = torch.randint(0, num_nodes, size=(2, num_neg_samples)).to(edge_index)
@@ -394,6 +393,7 @@ class PreModel(nn.Module):
         x_init = x[mask_nodes]
         x_rec  = recon[mask_nodes]
         
+        # print(F.mse_loss(enc_rep[mask_nodes], guide_enc_rep[mask_nodes]))
         loss =   self.alpha * self.criterion(x_rec, x_init)  +  self.gamma * F.mse_loss(enc_rep[mask_nodes], guide_enc_rep[mask_nodes]) + self.beta * loss_struct
         # loss = loss_struct
         return loss

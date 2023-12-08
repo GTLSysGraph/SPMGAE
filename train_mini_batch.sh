@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0
+CUDA_VISIBLE_DEVICES=2
 python train_mini_batch.py \
 --dataset  'Attack-ogbn-arxiv' \
---attack  'heuristic-0.2' \
+--attack  'DICE-0.5' \

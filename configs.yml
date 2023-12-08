@@ -695,42 +695,45 @@ squirrel:
 
 ogbn-arxiv:
   seeds: [1]
-  batch_size: 256
-  batch_size_f: 256
-  lr: 0.002
-  lr_f: 0.005
+  lr: 0.001
+  lr_f: 0.01
   num_hidden: 1024
   num_heads: 4
-  weight_decay: 0.04
-  weight_decay_f: 1e-4
-  max_epoch: 1
-  max_epoch_f: 1
+  weight_decay: 0
+  weight_decay_f: 5e-4
+  max_epoch: 1000
+  max_epoch_f: 600
   mask_rate: 0.5
   drop_edge_rate: 0.5
-  num_layers: 4
+  num_layers: 3
   encoder: gat
   decoder: gat 
   activation: prelu
   in_drop: 0.2
-  attn_drop: 0.2
+  attn_drop: 0.1
   linear_prob: True
   loss_fn: sce
   replace_rate: 0.0
-  alpha_l: 4 # 2
+  alpha_l: 3 # 2
   scheduler: True
   norm: layernorm
   optimizer: 'adamw'
 
 
-  #
+  # mini batch
+  max_epoch          : 5
+  max_epoch_f        : 200
+  batch_size         : 512
+  batch_size_f       : 256
   sim_mode           : cosine
-  keep_threshold     : 0.02
-  dele_threshold     : 0.02 
+  keep_threshold     : 0.6
+  dele_threshold     : 0.4
   edge_hidden        : 64
-  updata_guide_model : 200  
-  decay              : 0.1 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
+  updata_guide_model : 5  
+  decay              : 0.9 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
   undirected         : False
-  add_rate           : 0.8
-  gamma              : 40  #这个值也可以设置的大一点，
-  beta               : 0.5 #pubmed边的重建会起作用，比设置为0要好
+  add_rate           : 0.
+  alpha              : 0.
+  gamma              : 0.  #这个值也可以设置的大一点，
+  beta               : 1  #pubmed边的重建会起作用，比设置为0要好
   type_graph4recon   : "refine"

@@ -12,35 +12,35 @@ from utils import accuracy,show_occupied_memory,set_random_seed
 
 
 
-def evaluete_mini_batch(model, graph, labels, split_idx, num_classes, lr_f, weight_decay_f, max_epoch_f, linear_prob, device, batch_size, shuffle):
+def evaluete_mini_batch(model, graph, num_classes, lr_f, weight_decay_f, max_epoch_f, linear_prob, device, batch_size, shuffle):
     
-    train_mask = split_idx['train']
-    val_mask   = split_idx['valid']
-    test_mask  = split_idx['test']
-    labels     = labels
+    train_mask = graph.ndata["train_mask"]
+    val_mask = graph.ndata["val_mask"]
+    test_mask = graph.ndata["test_mask"]
+    labels = graph.ndata["label"]
     train_lbls, val_lbls, test_lbls = labels[train_mask], labels[val_mask], labels[test_mask]
-    
+
     print(f"num_train: {train_mask.shape[0]}, num_val: {val_mask.shape[0]}, num_test: {test_mask.shape[0]}")
 
     # 这里要注意labels的位置不一样 linear在cpu上，而finetune在cuda上
     if linear_prob:
         test_acc = linear_probing_minibatch(model, graph, [train_mask,val_mask,test_mask],[train_lbls, val_lbls, test_lbls], lr_f=lr_f, weight_decay_f=weight_decay_f, max_epoch_f=max_epoch_f, batch_size=batch_size, device=device, shuffle=shuffle)
     else:
-        test_acc = finetune(model, graph, split_idx, labels.to(device), num_classes, lr_f=lr_f, weight_decay_f=weight_decay_f, max_epoch_f=max_epoch_f, use_scheduler=True,batch_size=batch_size, device=device)
+        test_acc = finetune(model, graph, labels.to(device), num_classes, lr_f=lr_f, weight_decay_f=weight_decay_f, max_epoch_f=max_epoch_f, use_scheduler=True,batch_size=batch_size, device=device)
     return test_acc
 
 
-def finetune(model, graph, split_idx, labels, num_classes, lr_f, weight_decay_f, max_epoch_f, use_scheduler, batch_size, device):
+
+def finetune(model, graph, labels, num_classes, lr_f, weight_decay_f, max_epoch_f, use_scheduler, batch_size, device):
     logging.info("-- Finetuning in downstream tasks ---")
 
-    train_nid = split_idx['train'].numpy()
-    val_nid = split_idx['valid'].numpy()
-    test_nid = split_idx['test'].numpy()
+    train_nid = graph.ndata['train_mask'].nonzero().squeeze()
+    val_nid = graph.ndata['val_mask'].nonzero().squeeze()
+    test_nid = graph.ndata['test_mask'].nonzero().squeeze()
 
     model = model.get_encoder()
     model.reset_classifier(int(num_classes))
     model = model.to(device)
-
 
     criterion = torch.nn.CrossEntropyLoss()
 
@@ -92,11 +92,13 @@ def finetune(model, graph, split_idx, labels, num_classes, lr_f, weight_decay_f,
         acc = pred_counts.float().sum() / pred_counts.shape[0]
         return acc
 
+
     best_val_acc = 0
     best_model = None
     best_epoch = 0
     test_acc = 0
     early_stop_cnt = 0
+
     
     for epoch in range(max_epoch_f):
         if early_stop_cnt >= 10:
@@ -150,6 +152,7 @@ def finetune(model, graph, split_idx, labels, num_classes, lr_f, weight_decay_f,
 
 
 
+
 def linear_probing_minibatch(model, graph, mask, labels, lr_f, weight_decay_f, max_epoch_f, batch_size, device, shuffle):
     logging.info("-- Linear Probing in downstream tasks ---")
 
@@ -197,7 +200,6 @@ def linear_probing_minibatch(model, graph, mask, labels, lr_f, weight_decay_f, m
 
     print(f"# final_acc: {np.mean(acc):.4f}, std: {np.std(acc):.4f}")
     return np.mean(acc)
-
 
 
 
@@ -278,9 +280,9 @@ def node_classification_linear_probing(embeddings, labels, lr, weight_decay, max
     with torch.no_grad():
         test_acc = eval_forward(test_loader, test_label)
     if mute:
-        print(f"# IGNORE: Linear Probing | TestAcc: {test_acc:.4f}, Best ValAcc: {best_val_acc:.4f} in epoch {best_val_epoch}")
+        print(f"# IGNORE: --- TestAcc: {test_acc:.4f}, Best ValAcc: {best_val_acc:.4f} in epoch {best_val_epoch} --- ")
     else:
-        print(f"Linear Probing | TestAcc: {test_acc:.4f}, Best ValAcc: {best_val_acc:.4f} in epoch {best_val_epoch} --- ")
+        print(f"--- TestAcc: {test_acc:.4f}, Best ValAcc: {best_val_acc:.4f} in epoch {best_val_epoch} --- ")
 
     return test_acc
 
@@ -311,3 +313,4 @@ class LogisticRegression(nn.Module):
     def forward(self, g, x, *args):
         logits = self.linear(x)
         return logits
+    

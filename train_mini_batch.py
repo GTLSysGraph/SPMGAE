@@ -62,6 +62,7 @@ def pretrain_mini_batch(param, model, graph, optimizer, batch_size, lr, weight_d
             # print('num  edges : {}'.format(subgraph.num_edges()))
             # print('keep edges : {}'.format(len(ref_edges_index[0])))
             # print('del  edges : {}'.format(len(del_edges_index[0])))
+            # quit()
             ############################################################
 
             loss, loss_dict = model(graph_refine, del_edges, subgraph.ndata["feat"], epoch)
@@ -100,18 +101,13 @@ def Train_SPMGAE_nodecls(margs):
         # now just attack use
         dataset  = load_attack_data(DATASET['ATTACK'])
         graph  = dataset.graph   
-        train_idx = graph.ndata['train_mask'].nonzero().squeeze()
-        val_idx = graph.ndata['val_mask'].nonzero().squeeze()
-        test_idx = graph.ndata['test_mask'].nonzero().squeeze()
-        split_idx = {'train': train_idx, 'valid': val_idx,'test': test_idx}
-        labels = graph.ndata['label']
     else:
         dataset  = load_data(dataset_name)
         split_idx = dataset.get_idx_split()
         graph, labels = dataset[0] # ogbn-arxiv
 
     
-    labels = labels.squeeze()   # 变成1维，后面验证需要
+    # labels = labels.squeeze()   # 变成1维，后面验证需要
     graph = dgl.remove_self_loop(graph)
 
 
@@ -131,7 +127,39 @@ def Train_SPMGAE_nodecls(margs):
 
     if param.use_cfg:
         param = load_best_configs(param, dataset_name.split('-', 1)[1].lower() if dataset_name.split('-', 1)[0] == 'Attack' else dataset_name.lower() , "./configs.yml")
-    print(param)
+    # print(param)
+
+    # ##################################################################################################################
+    # grid search
+    # grid_num = 0 
+    # for gamma in [0.2, 0.4, 0.6, 0.8, 1]:
+    #     # for beta in [0.0, 0.001, 0.1]:
+    #     for decay in [0.2, 0.8]:
+    #         for add_rate in [0.2, 0.4, 0.6, 0.8]:
+    #             for threshold in [[0.8, 0.5], [0.8, 0.4], [0.8, 0.3], [0.6, 0.5], [0.6, 0.4], [0.6, 0.3], [0.5, 0.5], [0.5, 0.4], [0.5,0.3]]:
+    #                 # for type_graph4recon in ['refine', 'ptb']:
+    #                 grid_num += 1
+    #                 param.gamma              = gamma
+    #                 # param.beta               = beta
+    #                 param.decay              = decay
+    #                 param.add_rate           = add_rate
+    #                 # param.num_hidden         = num_hidden
+    #                 # param.type_graph4recon   = type_graph4recon
+    #                 param.keep_threshold     = threshold[0]
+    #                 param.dele_threshold     = threshold[1]
+    #                 print('############################################################################')
+    #                 print('grid search at experiment {}'.format(grid_num))
+    #                 print('************************************************')
+    #                 print('gamma                : {}'.format(param.gamma))
+    #                 # print('beta                 : {}'.format(param.beta))
+    #                 print('add_rate             : {}'.format(param.add_rate))
+    #                 print('decay                : {}'.format(param.decay))
+    #                 print('keep_threshold       : {}'.format(param.keep_threshold))
+    #                 print('dele_threshold       : {}'.format(param.dele_threshold))
+    #                 print('type_graph4recon     : {}'.format(param.type_graph4recon))
+    #                 print('************************************************')
+    #                 ###############################################################################################################
+
 
     seeds         = param.seeds
     max_epoch     = param.max_epoch
@@ -214,8 +242,7 @@ def Train_SPMGAE_nodecls(margs):
 
         final_acc = evaluete_mini_batch(
                         eval_model, 
-                        graph, labels,
-                        split_idx,
+                        graph, 
                         num_classes, 
                         lr_f, weight_decay_f, max_epoch_f, 
                         linear_prob, 

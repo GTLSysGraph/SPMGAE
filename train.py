@@ -115,7 +115,7 @@ def Train_SPMGAE_nodecls(margs):
         param = load_best_configs(param, dataset_name.split('-')[1].lower() if dataset_name.split('-')[0] == 'Attack' else dataset_name.lower() , "./configs.yml")
 
 
-    # ##################################################################################################################
+    ##################################################################################################################
     # # grid search
     # grid_num = 0 
     # # for gamma in [0, 1, 10]:
@@ -146,7 +146,7 @@ def Train_SPMGAE_nodecls(margs):
     #                 print('dele_threshold       : {}'.format(param.dele_threshold))
     #                 print('type_graph4recon     : {}'.format(param.type_graph4recon))
     #                 print('************************************************')
-    #                 ###############################################################################################################
+    ###############################################################################################################
 
     seeds         = param.seeds
     max_epoch     = param.max_epoch
