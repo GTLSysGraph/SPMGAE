@@ -322,7 +322,8 @@ class PreModel(nn.Module):
     def forward(self, graph_refine, del_edges, x, epoch):
         # ---- attribute reconstruction ----
         loss = self.mask_attr_prediction(graph_refine, del_edges, x, epoch)
-        return loss
+        loss_item = {"loss": loss.item()}
+        return loss, loss_item
     
     def random_negative_sampler(self,edge_index, num_nodes, num_neg_samples):
         neg_edges = torch.randint(0, num_nodes, size=(2, num_neg_samples)).to(edge_index)
