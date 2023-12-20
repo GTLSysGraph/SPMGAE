@@ -702,8 +702,6 @@ ogbn-arxiv:
   weight_decay_f: 5e-4
   max_epoch: 1000
   max_epoch_f: 600
-  mask_rate: 0.5
-  drop_edge_rate: 0.5
   num_layers: 3
   encoder: gat
   decoder: gat 
@@ -716,24 +714,116 @@ ogbn-arxiv:
   alpha_l: 3 # 2
   scheduler: True
   norm: layernorm
-  optimizer: 'adamw'
+  optimizer: adamw
 
 
-  # mini batch
+  # mini batch 
+
+  # DICE 0.5
+  # mask_rate          : 0.5
+  # drop_edge_rate     : 0.5
+  # num_hidden         : 1024
+  # max_epoch          : 5
+  # max_epoch_f        : 200
+  # batch_size         : 256
+  # batch_size_f       : 256
+  # sim_mode           : cosine
+  # keep_threshold     : 0.5
+  # dele_threshold     : 0.5
+  # edge_hidden        : 64
+  # updata_guide_model : 1  
+  # decay              : 0.2 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
+  # undirected         : False
+  # add_rate           : 0.2
+  # alpha              : 1
+  # gamma              : 0.2  #这个值也可以设置的大一点，
+  # beta               : 0.2  #pubmed边的重建会起作用，比设置为0要好
+  # type_graph4recon   : "refine"
+
+
+  # PRBCD 0.5 61.09
+  # mask_rate          : 0.5
+  # drop_edge_rate     : 0.5
+  # num_hidden         : 1024
+  # max_epoch          : 5
+  # max_epoch_f        : 200
+  # batch_size         : 256
+  # batch_size_f       : 256
+  # sim_mode           : cosine
+  # keep_threshold     : 0.5
+  # dele_threshold     : 0.5
+  # edge_hidden        : 64
+  # updata_guide_model : 1  
+  # decay              : 0.2 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
+  # undirected         : False
+  # add_rate           : 0.2
+  # alpha              : 1
+  # gamma              : 0.2  #这个值也可以设置的大一点，
+  # beta               : 0.2  #pubmed边的重建会起作用，比设置为0要好
+  # type_graph4recon   : "refine"
+
+
+  # heuristic 0.5 56.90
+  # mask_rate          : 0.5
+  # drop_edge_rate     : 0.5
+  # num_hidden         : 1024
+  # max_epoch          : 5
+  # max_epoch_f        : 200 
+  # batch_size         : 256 
+  # batch_size_f       : 256 
+  # sim_mode           : cosine
+  # keep_threshold     : 0.55 
+  # dele_threshold     : 0.45 
+  # edge_hidden        : 64
+  # updata_guide_model : 1   
+  # decay              : 0.2
+  # undirected         : False
+  # add_rate           : 0.85
+  # alpha              : 1
+  # gamma              : 0.15  
+  # beta               : 0.  
+  # type_graph4recon   : "refine"
+
+
+  # random 0.5  65.40
+  # mask_rate          : 0.5
+  # drop_edge_rate     : 0.5
+  # num_hidden         : 1024
+  # max_epoch          : 5
+  # max_epoch_f        : 200
+  # batch_size         : 256
+  # batch_size_f       : 256
+  # sim_mode           : cosine
+  # keep_threshold     : 0.5
+  # dele_threshold     : 0.5
+  # edge_hidden        : 64
+  # updata_guide_model : 1  
+  # decay              : 0.1 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
+  # undirected         : False
+  # add_rate           : 0.2
+  # alpha              : 1
+  # gamma              : 0.1  #这个值也可以设置的大一点，
+  # beta               : 0.2  #pubmed边的重建会起作用，比设置为0要好
+  # type_graph4recon   : "refine"
+
+
+  # PRBCD 0.5 61.91
+  mask_rate          : 0.5
+  drop_edge_rate     : 0.5
   num_hidden         : 1024
   max_epoch          : 5
   max_epoch_f        : 200
-  batch_size         : 512
+  batch_size         : 256
   batch_size_f       : 256
   sim_mode           : cosine
-  keep_threshold     : 0.5
-  dele_threshold     : 0.5
+  keep_threshold     : 0.6
+  dele_threshold     : 0.4
   edge_hidden        : 64
   updata_guide_model : 1  
-  decay              : 0.9 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
+  decay              : 0.5 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
   undirected         : False
-  add_rate           : 0.8
+  add_rate           : 0.4
   alpha              : 1
-  gamma              : 0.8  #这个值也可以设置的大一点，
-  beta               : 0.  #pubmed边的重建会起作用，比设置为0要好
+  gamma              : 0.0  #这个值也可以设置的大一点，
+  beta               : 0.2  #pubmed边的重建会起作用，比设置为0要好
   type_graph4recon   : "refine"

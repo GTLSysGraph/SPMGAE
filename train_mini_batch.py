@@ -99,6 +99,7 @@ def Train_SPMGAE_nodecls(margs):
             "ptb_rate":margs.attack.split('-')[1]
         }
         # now just attack use
+        print("attack type: " + margs.attack.split('-')[0] + ' | ' + "ptb_rate: " + margs.attack.split('-')[1])
         dataset  = load_attack_data(DATASET['ATTACK'])
         graph  = dataset.graph   
     else:
@@ -129,50 +130,50 @@ def Train_SPMGAE_nodecls(margs):
         param = load_best_configs(param, dataset_name.split('-', 1)[1].lower() if dataset_name.split('-', 1)[0] == 'Attack' else dataset_name.lower() , "./configs.yml")
     # print(param)
 
-    # ##################################################################################################################
-    # grid search
+    # #################################################################################################################
+    # # grid search
     # grid_num = 0 
     # for gamma in [0.2, 0.4, 0.6, 0.8, 1]:
-    #     # for beta in [0.0, 0.001, 0.1]:
-    #     for decay in [0.2, 0.8]:
-    #         for add_rate in [0.2, 0.4, 0.6, 0.8]:
-    #             for threshold in [[0.8, 0.5], [0.8, 0.4], [0.8, 0.3], [0.6, 0.5], [0.6, 0.4], [0.6, 0.3], [0.5, 0.5], [0.5, 0.4], [0.5,0.3]]:
-    #                 # for type_graph4recon in ['refine', 'ptb']:
-    #                 grid_num += 1
-    #                 param.gamma              = gamma
-    #                 # param.beta               = beta
-    #                 param.decay              = decay
-    #                 param.add_rate           = add_rate
-    #                 # param.num_hidden         = num_hidden
-    #                 # param.type_graph4recon   = type_graph4recon
-    #                 param.keep_threshold     = threshold[0]
-    #                 param.dele_threshold     = threshold[1]
-    #                 print('############################################################################')
-    #                 print('grid search at experiment {}'.format(grid_num))
-    #                 print('************************************************')
-    #                 print('gamma                : {}'.format(param.gamma))
-    #                 # print('beta                 : {}'.format(param.beta))
-    #                 print('add_rate             : {}'.format(param.add_rate))
-    #                 print('decay                : {}'.format(param.decay))
-    #                 print('keep_threshold       : {}'.format(param.keep_threshold))
-    #                 print('dele_threshold       : {}'.format(param.dele_threshold))
-    #                 print('type_graph4recon     : {}'.format(param.type_graph4recon))
-    #                 print('************************************************')
-    #                 ###############################################################################################################
+    #     for beta in [0.2, 0.4, 0.6, 0.8, 1]:
+    #         for decay in [0.2, 0.4, 0.6, 0.8]:
+    #             for add_rate in [0.2, 0.4, 0.6, 0.8, 1.0]:
+    #                 for threshold in [[0.6, 0.4], [0.5, 0.5]]:
+    #                     # for type_graph4recon in ['refine', 'ptb']:
+    #                     grid_num += 1
+    #                     param.gamma              = gamma
+    #                     param.beta               = beta
+    #                     param.decay              = decay
+    #                     param.add_rate           = add_rate
+    #                     # param.num_hidden         = num_hidden
+    #                     # param.type_graph4recon   = type_graph4recon
+    #                     param.keep_threshold     = threshold[0]
+    #                     param.dele_threshold     = threshold[1]
+    #                     print('############################################################################')
+    #                     print('grid search at experiment {}'.format(grid_num))
+    #                     print('************************************************')
+    #                     print('gamma                : {}'.format(param.gamma))
+    #                     print('beta                 : {}'.format(param.beta))
+    #                     print('decay                : {}'.format(param.decay))
+    #                     print('add_rate             : {}'.format(param.add_rate))
+    #                     print('keep_threshold       : {}'.format(param.keep_threshold))
+    #                     print('dele_threshold       : {}'.format(param.dele_threshold))
+    #                     print('type_graph4recon     : {}'.format(param.type_graph4recon))
+    #                     print('************************************************')
+    #                     ###############################################################################################################
 
 
-    seeds         = param.seeds
-    max_epoch     = param.max_epoch
-    max_epoch_f   = param.max_epoch_f
-    num_hidden    = param.num_hidden
-    num_layers    = param.num_layers
-    encoder_type  = param.encoder
-    decoder_type  = param.decoder
-    encoder = param.encoder
-    decoder = param.decoder
-    replace_rate  = param.replace_rate
-    optim_type    = param.optimizer 
-    loss_fn       = param.loss_fn
+    seeds          = param.seeds
+    max_epoch      = param.max_epoch
+    max_epoch_f    = param.max_epoch_f
+    num_hidden     = param.num_hidden
+    num_layers     = param.num_layers
+    encoder_type   = param.encoder
+    decoder_type   = param.decoder
+    encoder        = param.encoder
+    decoder        = param.decoder
+    replace_rate   = param.replace_rate
+    optim_type     = param.optimizer 
+    loss_fn        = param.loss_fn
     lr             = param.lr
     weight_decay   = param.weight_decay
     lr_f           = param.lr_f
@@ -192,70 +193,71 @@ def Train_SPMGAE_nodecls(margs):
     os.makedirs(model_dir, exist_ok=True)
 
 
-    # for i, seed in enumerate(seeds):
-    #     print(f"####### Run {i+1} for seed {seed}")
-    set_random_seed(0)
+    for i, seed in enumerate(seeds):
+        print(f"####### Run {i+1} for seed {seed}")
+        set_random_seed(0)
 
-    if logs:
-        logger = TBLogger(name=f"{dataset_name.lower()}_loss_{loss_fn}_rpr_{replace_rate}_nh_{num_hidden}_nl_{num_layers}_lr_{lr}_mp_{max_epoch}_mpf_{max_epoch_f}_wd_{weight_decay}_wdf_{weight_decay_f}_{encoder_type}_{decoder_type}")
-    else:
-        logger = None
+        if logs:
+            logger = TBLogger(name=f"{dataset_name.lower()}_loss_{loss_fn}_rpr_{replace_rate}_nh_{num_hidden}_nl_{num_layers}_lr_{lr}_mp_{max_epoch}_mpf_{max_epoch_f}_wd_{weight_decay}_wdf_{weight_decay_f}_{encoder_type}_{decoder_type}")
+        else:
+            logger = None
 
-    model_name = f"{encoder}_{decoder}_{num_hidden}_{num_layers}_{dataset_name}_{param.mask_rate}_{num_hidden}_checkpoint.pt"
+        model_name = f"{encoder}_{decoder}_{num_hidden}_{num_layers}_{dataset_name}_{param.mask_rate}_{num_hidden}_checkpoint.pt"
 
-    model = build_model(param)
+        model = build_model(param)
 
-    if not param.no_pretrain:
-        # ------------- pretraining starts ----------------
-        if not load_model:
-            logging.info("---- start pretraining ----")
-            model = pretrain_mini_batch(param, model, graph,optimizer=optimizer_type, batch_size=batch_size, lr=lr, weight_decay=weight_decay, max_epoch=max_epoch, device=device, use_scheduler=use_scheduler, model_dir=model_dir, model_name=model_name)
+        if not param.no_pretrain:
+            # ------------- pretraining starts ----------------
+            if not load_model:
+                logging.info("---- start pretraining ----")
+                model = pretrain_mini_batch(param, model, graph,optimizer=optimizer_type, batch_size=batch_size, lr=lr, weight_decay=weight_decay, max_epoch=max_epoch, device=device, use_scheduler=use_scheduler, model_dir=model_dir, model_name=model_name)
+            
+                model = model.cpu()
+                logging.info(f"saving model to {model_dir}/{model_name}...")
+                torch.save(model.state_dict(), os.path.join(model_dir, model_name))
+            # ------------- pretraining ends ----------------   
+
+            if load_model:
+                model.load_state_dict(torch.load(os.path.join(param.checkpoint_path)))
+                logging.info(f"Loading Model from {param.checkpoint_path}...")
+        else:
+            logging.info("--- no pretrain ---")
+
+
+        # eval
+        model = model.to(device)
+        model.eval()
+
+        logging.info("---- start finetuning / evaluation ----")
+
+        final_accs = []
+        eval_seeds = [0]
+        for i,_ in enumerate(eval_seeds):
+            print(f"############################### Run eval seed {eval_seeds[i]} ###############################")
+            set_random_seed(eval_seeds[i])
+            eval_model = build_model(param)
+            eval_model.load_state_dict(model.state_dict())
+            eval_model.to(device)
+
+            print(f"features size : {graph.ndata['feat'].shape[1]}")
+            logging.info("start evaluation...")
+
+            final_acc = evaluete_mini_batch(
+                            eval_model, 
+                            graph, 
+                            num_classes, 
+                            lr_f, weight_decay_f, max_epoch_f, 
+                            linear_prob, 
+                            device, batch_size=batch_size_f, shuffle=True)
+
+            final_accs.append(float(final_acc))
+
+            print(f"Run {eval_seeds[i]} | TestAcc: {final_acc:.4f}")
+            
+        print(f"# final_acc: {np.mean(final_accs):.4f}, std: {np.std(final_accs):.4f}")
         
-            model = model.cpu()
-            logging.info(f"saving model to {model_dir}/{model_name}...")
-            torch.save(model.state_dict(), os.path.join(model_dir, model_name))
-        # ------------- pretraining ends ----------------   
-
-        if load_model:
-            model.load_state_dict(torch.load(os.path.join(param.checkpoint_path)))
-            logging.info(f"Loading Model from {param.checkpoint_path}...")
-    else:
-        logging.info("--- no pretrain ---")
-
-
-    # eval
-    model = model.to(device)
-    model.eval()
-
-    logging.info("---- start finetuning / evaluation ----")
-
-    final_accs = []
-    for i,_ in enumerate(seeds):
-        print(f"############################### Run eval seed {seeds[i]} ###############################")
-        set_random_seed(seeds[i])
-        eval_model = build_model(param)
-        eval_model.load_state_dict(model.state_dict())
-        eval_model.to(device)
-
-        print(f"features size : {graph.ndata['feat'].shape[1]}")
-        logging.info("start evaluation...")
-
-        final_acc = evaluete_mini_batch(
-                        eval_model, 
-                        graph, 
-                        num_classes, 
-                        lr_f, weight_decay_f, max_epoch_f, 
-                        linear_prob, 
-                        device, batch_size=batch_size_f, shuffle=True)
-
-        final_accs.append(float(final_acc))
-
-        print(f"Run {seeds[i]} | TestAcc: {final_acc:.4f}")
-        
-    print(f"# final_acc: {np.mean(final_accs):.4f}, std: {np.std(final_accs):.4f}")
-    
-    if logger is not None:
-        logger.finish()
+        if logger is not None:
+            logger.finish()
 
 
 

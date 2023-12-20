@@ -395,6 +395,7 @@ class PreModel(nn.Module):
         x_rec  = recon[mask_nodes]
         
         # print(F.mse_loss(enc_rep[mask_nodes], guide_enc_rep[mask_nodes]))
+        # print(loss_struct)
         loss =   self.alpha * self.criterion(x_rec, x_init)  +  self.gamma * F.mse_loss(enc_rep[mask_nodes], guide_enc_rep[mask_nodes]) + self.beta * loss_struct
         # loss = loss_struct
         return loss

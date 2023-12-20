@@ -186,6 +186,12 @@ def Train_SPMGAE_nodecls(margs):
         graph = dgl.add_self_loop(graph).to(device)
 
 
+    # print(graph)
+    # homophily_score_before = compute_graph_homophily_score(graph, labels)
+    # print(homophily_score_before)
+    # quit()
+
+
     acc_list = []
     estp_acc_list = []
 
