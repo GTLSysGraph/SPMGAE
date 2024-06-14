@@ -13,7 +13,7 @@ class SquirrelDGL(torch.utils.data.Dataset):
     def __init__(self,args):
         data_name = args.data.split('-')[1].lower()
 
-        data_dir = '/home/songsh/SPMGAE/datasets_dgl/all_data_attack/%s/%s/' % (args.attack, data_name)
+        data_dir = '/home/songsh/datasets_dgl/all_data_attack/%s/%s/' % (args.attack, data_name)
 
         adj = load_npz(data_dir + '%s_%s_%s.npz' % (args.attack, data_name, args.ptb_rate))
         g = dgl.from_scipy(adj)

@@ -10,6 +10,7 @@ from models.gat    import GAT
 from models.gcn    import GCN
 from models.gprgnn import GPRGNN
 from models.dot_gat import DotGAT
+from models.guard   import GATGuard,GCNAdjNorm
 from models.edgedecoder import EdgeDecoder
 from utils import add_ptb_edges
 import torch.nn.functional as F
@@ -88,6 +89,19 @@ def setup_module(m_type, enc_dec, in_dim, num_hidden, out_dim, num_layers, dropo
             nn.Dropout(0.2),
             nn.Linear(num_hidden, out_dim)
         )
+    elif m_type == "guard":
+        mod = GATGuard( in_features=in_dim,
+                        out_features=num_hidden,
+                        hidden_features=num_hidden,
+                        n_layers=num_layers,
+                        n_heads=nhead,
+                        activation=F.leaky_relu,
+                        layer_norm=False,
+                        feat_norm=None,
+                        adj_norm_func=GCNAdjNorm,
+                        drop=False,
+                        attention=True,
+                        dropout=0.0)
     elif m_type == 'gprgnn':
         mod = GPRGNN(in_dim=in_dim, 
                      hidden_dim=num_hidden, 
@@ -174,8 +188,9 @@ class PreModel(nn.Module):
         dec_in_dim = num_hidden
         dec_num_hidden = num_hidden // nhead_out if decoder_type in ("gat", "dotgat") else num_hidden 
 
+
+
         # build encoder
-    
         self.encoder = setup_module(
             m_type=encoder_type,
             enc_dec="encoding",
@@ -346,9 +361,13 @@ class PreModel(nn.Module):
 
         graph_preturbation, use_x, (mask_nodes, keep_nodes), (perb_edges_src,perb_edges_dst) = self.encoding_mask_noise(use_g, del_edges, x, self._add_rate, self._mask_rate, undirected = self._undirected)
 
-        enc_rep, all_hidden = self.encoder(graph_preturbation, use_x)
-        if self._concat_hidden:
-            enc_rep = torch.cat(all_hidden, dim=1)
+
+        if self._encoder_type not in ("mlp", "linear"):
+            enc_rep, all_hidden = self.encoder(graph_preturbation, use_x)
+            if self._concat_hidden:
+                enc_rep = torch.cat(all_hidden, dim=1)
+        else:
+            enc_rep = self.encoder(use_x)
 
 
         if epoch % self.updata_guide_model == 0:
@@ -356,9 +375,13 @@ class PreModel(nn.Module):
             self.guide_model_apply_shadow()
 
         self.guide_encoder = self.guide_encoder.to('cuda')
-        guide_enc_rep, guide_all_hidden = self.guide_encoder(graph_refine, x)
-        if self._concat_hidden:
-            guide_enc_rep = torch.cat(guide_all_hidden, dim=1)
+        if self._encoder_type not in ("mlp", "linear"):
+            guide_enc_rep, guide_all_hidden = self.guide_encoder(graph_refine, x)
+            if self._concat_hidden:
+                guide_enc_rep = torch.cat(guide_all_hidden, dim=1)
+        else:
+            guide_enc_rep = self.guide_encoder(x)
+        
         guide_enc_rep = guide_enc_rep.detach()
         
 
@@ -401,7 +424,12 @@ class PreModel(nn.Module):
         return loss
 
     def embed(self, g, x):
-        rep = self.encoder(g, x) # 注意，这里返回的rep是一个tuple
+        if self._encoder_type not in ("mlp", "linear"):
+            rep = self.encoder(g, x) # 注意，这里返回的rep是一个tuple
+        else:
+            rep = self.encoder(x)
+            rep = [rep, rep]
+
         return rep
 
     def get_encoder(self):
