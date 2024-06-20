@@ -86,6 +86,30 @@ def accuracy(y_pred, y_true):
     correct = correct.sum().item()
     return correct / len(y_true)
 
+
+def accuracy_test(mask, pred, true):
+    y_pred = pred[mask]
+    y_true = true[mask]
+
+    y_true = y_true.squeeze().long()
+    preds = y_pred.max(1)[1].type_as(y_true)
+    correct = preds.eq(y_true).double()
+    
+    # 把分类正确的索引保存下来
+    index = mask.nonzero().squeeze()
+    correct_index = correct.nonzero().squeeze()
+    torch.save(index[correct_index], './index_save/GraphMAE_Cora_Meta_0.25_index.pt')
+    torch.save(pred.max(1)[1].type_as(y_true), './index_save/GraphMAE_Cora_Meta_0.25_preds.pt')
+    print("save done!")
+
+    correct = correct.sum().item()
+    return correct / len(y_true)
+
+
+
+
+
+
 def create_activation(name):
     if name == "relu":
         return nn.ReLU()

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from utils import create_optimizer, accuracy
+from utils import create_optimizer, accuracy,accuracy_test
 from tqdm import tqdm
 import copy
 
@@ -68,7 +68,11 @@ def linear_probing_for_transductive_node_classiifcation(model, graph, feat, labe
             pred = model(graph, x)
             val_acc = accuracy(pred[val_mask], labels[val_mask])
             val_loss = criterion(pred[val_mask], labels[val_mask])
+
+            # 分析一下最后test节点中分类正确节点
+            # test_acc = accuracy_test(test_mask, pred, labels)
             test_acc = accuracy(pred[test_mask], labels[test_mask])
+
             test_loss = criterion(pred[test_mask], labels[test_mask])
         
         if val_acc >= best_val_acc:

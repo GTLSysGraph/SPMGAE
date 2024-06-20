@@ -11,7 +11,7 @@ cora:
   max_epoch_f: 300
   mask_rate: 0.5
   num_layers: 2
-  encoder: guard
+  encoder: gat
   decoder: gat
   activation: prelu
   in_drop: 0.2
@@ -25,19 +25,20 @@ cora:
   concat_hidden: False 
 
   # 随便尝试
-  num_hidden         : 512
-  drop_edge_rate     : 0.1
+  num_hidden         : 64
+  drop_edge_rate     : 0.0
   sim_mode           : jaccard
-  keep_threshold     : 0.02
-  dele_threshold     : 0.02
-  edge_hidden        : 64 #最好的还是64的时候
-  updata_guide_model : 100
-  decay              : 0.4 #在扰动小的情况下是不是希望更新的更快一些，也就是用到的新参数更频繁一些
+  keep_threshold     : 0.
+  dele_threshold     : 0.
+  edge_hidden        : 32
+  updata_guide_model : 2000   # 不能太频繁 100 在攻击的时候不错
+  decay              : 0.995 # 在被攻击的时候好像希望新的参数的比重稍微大一些，即这个值稍小一些
   undirected         : False
-  add_rate           : 0.4
-  gamma              : 20
-  beta               : 0.001
-  type_graph4recon   : "ptb"
+  add_rate           : 0.
+  gamma              : 0.
+  beta               : 0.
+  type_graph4recon   : "refine"
+
 
 
   # try nettack DICE random
